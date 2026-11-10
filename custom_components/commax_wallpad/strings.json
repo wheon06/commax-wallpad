@@ -1,0 +1,98 @@
+{
+  "title": "COMMAX Wallpad",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect COMMAX",
+        "menu_options": {
+          "manual": "Enter connection details",
+          "legacy": "Import existing connection file"
+        }
+      },
+      "manual": {
+        "title": "Connection details",
+        "description": "Enter endpoints and proxy credentials from your own app traffic. They may differ from the app login.",
+        "data": {
+          "proxy_url": "HTTP proxy URL",
+          "target_url": "Wallpad SOAP URL",
+          "proxy_username": "Proxy username",
+          "proxy_password": "Proxy password"
+        }
+      },
+      "legacy": {
+        "title": "Import connection file",
+        "description": "Read /config/commax_connection.json locally."
+      },
+      "channels": {
+        "title": "Choose channel types",
+        "description": "Move a number from lights to fans to change type. The previous HA entity is removed. Apple Home rooms/scenes/automations may need reassignment. Reload HomeKit Bridge after saving.",
+        "data": {
+          "lights": "Light channels (e.g. 1-3,6)",
+          "fans": "Exhaust fan channels (e.g. 7,8)",
+          "poll_seconds": "Polling interval (seconds)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure connection",
+        "description": "Entity identities are preserved. Re-enter the password.",
+        "data": {
+          "proxy_url": "HTTP proxy URL",
+          "target_url": "Wallpad SOAP URL",
+          "proxy_username": "Proxy username",
+          "proxy_password": "Proxy password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate proxy",
+        "data": {
+          "proxy_username": "Proxy username",
+          "proxy_password": "Proxy password"
+        }
+      }
+    },
+    "error": {
+      "invalid_connection": "Check HTTP URLs and proxy credentials.",
+      "invalid_channels": "Select distinct channel numbers or ranges, with no overlap between lights and fans.",
+      "invalid_auth": "Proxy authentication failed. Return to connection settings or capture fresh credentials.",
+      "cannot_connect": "Could not read the channel. Check connection, channel and compatibility.",
+      "missing_connection": "commax_connection.json is missing from the HA configuration directory."
+    },
+    "abort": {
+      "already_configured": "This wallpad is already configured.",
+      "reauth_successful": "Reauthentication successful.",
+      "reconfigure_successful": "Connection updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Change channel types",
+        "description": "Move a number from lights to fans to change type. The previous HA entity is removed. Apple Home rooms/scenes/automations may need reassignment. Reload HomeKit Bridge after saving.",
+        "data": {
+          "lights": "Light channels (e.g. 1-3,6)",
+          "fans": "Exhaust fan channels (e.g. 7,8)",
+          "poll_seconds": "Polling interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "invalid_connection": "Check HTTP URLs and proxy credentials.",
+      "invalid_channels": "Select distinct channel numbers or ranges, with no overlap between lights and fans.",
+      "invalid_auth": "Proxy authentication failed. Return to connection settings or capture fresh credentials.",
+      "cannot_connect": "Could not read the channel. Check connection, channel and compatibility.",
+      "missing_connection": "commax_connection.json is missing from the HA configuration directory."
+    }
+  },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "Light {channel}"
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "Exhaust fan {channel}"
+      }
+    }
+  }
+}

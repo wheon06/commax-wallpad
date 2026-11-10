@@ -1,2 +1,111 @@
-# commax-wallpad
-COMMAX wallpad lights and exhaust fans for Home Assistant and Apple Home on the local network
+# COMMAX Wallpad
+
+코맥스 월패드의 전등·배기를 Home Assistant와 Apple 홈에 연결하는 비공식 커스텀 연동입니다.
+
+**지원 범위는 같은 집 내부 네트워크에서의 제어입니다.** Homebridge나 별도 MQTT 서버는 필요하지 않습니다. Apple 홈은 미니PC의 Home Assistant와 로컬로 통신하지만, 코맥스 측 통신은 설치 환경의 단지/서비스 프록시를 경유하므로 인터넷이 필요할 수 있습니다.
+
+```mermaid
+flowchart LR
+    A[Apple 홈 · 같은 LAN] <--> B[Home Assistant / HomeKit Bridge]
+    B <--> C[COMMAX 커스텀 연동]
+    C <-- HTTP SOAP --> D[설치 환경의 코맥스 프록시]
+    D <--> E[월패드 · 전등 · 배기]
+```
+
+## 지원 상태
+
+| 항목 | 상태 |
+|---|---|
+| CDP-1020DW의 `urn:cds` / gSOAP 프록시 통신 | 기존 0.1 버전에서 실기기 제어 확인 |
+| 전등 켜기·끄기 / 상태 조회 | 지원 |
+| 전등 채널로 연결된 배기 | 팬으로 등록 가능 |
+| 등록 후 전등 ↔ 배기 유형 수정 | 설정에서 번호 이동 |
+| 밝기·색온도·풍량·난방·도어락 | 미지원 |
+| 다른 코맥스 모델·모든 아파트 | 호환성 미확인 |
+| 0.2 버전 | Home Assistant 2026.10.4 자동 테스트; 실기기 업그레이드 확인 필요 |
+
+제품명만으로 호환성을 보장하지 않습니다. 본인 앱의 `getLightItem` / `setLight` 통신 형식과 프록시 접속 권한을 확인해야 합니다. 다른 주소나 채널을 자동 탐색하지 않습니다.
+
+## 설치
+
+### HACS 사용자 지정 저장소
+
+저장소가 GitHub에 공개된 후 사용할 경로입니다. HACS 기본 목록 등재를 뜻하지 않습니다.
+
+1. HACS → 메뉴 → 사용자 지정 저장소.
+2. `https://github.com/wheon06/commax-wallpad`를 **Integration** 유형으로 추가.
+3. COMMAX Wallpad 다운로드 후 Home Assistant 재시작.
+4. 설정 → 기기 및 서비스 → 통합구성요소 추가 → **COMMAX Wallpad**.
+
+### 수동 설치
+
+소스를 압축 해제하거나 복제한 뒤, 실제 Home Assistant 설정 폴더를 지정합니다. 기존 연동이 있으면 먼저 백업합니다.
+
+```sh
+python3 tools/install.py --config-dir /YOUR/HA/CONFIG
+```
+
+Home Assistant를 재시작합니다. HA Container를 처음 설치한다면 [Docker 안내](docs/docker.md)를 따르세요.
+
+## 연결 설정
+
+처음 등록할 때 다음 중 하나를 고릅니다.
+
+- **연결 정보 직접 입력**: 본인의 프록시 주소, SOAP 주소, 프록시 인증 정보 입력.
+- **기존 파일 가져오기**: `/config/commax_connection.json`을 로컬에서 읽기. 기존 0.1 설치 또는 캡처 도구 출력과 호환됩니다.
+
+주소와 인증값은 제품 공통값이 아닙니다. 앱 로그인 비밀번호와 프록시 비밀번호가 다를 수 있습니다. 새 사용자는 [본인 통신에서 연결 정보 얻기](docs/connection.md)를 참고하세요.
+
+전등과 배기 목록에 사용할 번호를 넣습니다. 예: 전등 `1-3,6`, 배기 `7,8`. 한 번호를 두 목록에 중복 등록할 수 없습니다. 예시 번호는 사용자 환경과 무관합니다. 목록에 없는 채널은 조회하거나 제어하지 않습니다.
+
+등록 후 HA에서 엔티티 이름과 방을 원하는 대로 변경하세요.
+
+## 전등을 배기로 잘못 등록했다면
+
+**Apple 홈에서 유형을 바꾸는 것이 아니라 Home Assistant의 코맥스 연동 옵션에서 수정합니다.**
+
+1. 설정 → 기기 및 서비스 → COMMAX Wallpad → 설정(톱니바퀴).
+2. 해당 번호를 **전등 목록에서 제거**하고 **배기 목록에 추가**.
+3. 저장하면 연동이 다시 로드되고 이전 `light` 항목이 정리된 뒤 `fan` 항목이 생성됩니다.
+4. HomeKit Bridge를 다시 불러오고, 엔티티를 개별 선택한 경우 새 팬을 포함합니다.
+
+바뀐 기기는 Apple 홈에서 새 액세서리로 처리될 수 있습니다. 해당 기기의 방·장면·자동화를 다시 지정해야 할 수 있습니다. 다른 번호의 엔티티 ID와 사용자 지정 이름은 유지합니다. [자세한 유형 변경 안내](docs/channel-types.md)
+
+## Apple 홈에 연결
+
+1. HA → 설정 → 기기 및 서비스 → **HomeKit Bridge** 추가.
+2. 코맥스의 전등(`light`)과 배기(`fan`) 엔티티만 선택.
+3. 같은 LAN에 연결된 아이폰에서 홈 앱 → 액세서리 추가 → HA 알림의 QR 스캔.
+4. 홈 앱에서 이름과 방 지정.
+
+같은 공유기에 연결된 유선 미니PC와 Wi-Fi 아이폰도 사용할 수 있습니다. 방화벽이 있다면 HomeKit TCP 포트와 mDNS UDP 5353을 **내부망에만** 허용합니다. 외부 포트포워딩은 배포 범위에 포함하지 않습니다.
+
+## 기존 버전과 시험용 액세서리 정리
+
+[기존 0.1 업그레이드·깔끔하게 재설치](docs/reinstall.md)를 참고하세요. 시험용 YAML을 이름과 포트로 한정해 정리하는 도구를 제공합니다. 기본 실행은 변경하지 않는 미리보기입니다. 기존 연결 파일, Home Assistant 계정, 다른 통합, 자동화를 통째로 삭제하지 않습니다.
+
+## 동작과 오류 처리
+
+- 기본 30초마다 순서대로 상태 조회. 15~300초로 설정 가능.
+- 명령은 한 번만 전송하고 1초 간격으로 최대 5회 실제 상태 확인.
+- HTTP 200만으로 켜짐을 표시하지 않음. 상태가 바뀌지 않으면 작업 실패 표시.
+- 통신 장애와 인증 만료를 구분. 인증이 거부되면 UI에서 재인증.
+- 주소 변경은 연동의 재구성 메뉴, 번호·유형 변경은 옵션 메뉴 사용.
+- 진단 다운로드에는 주소·인증정보·기기 이름·원본 XML·전원 상태를 포함하지 않음.
+
+일부 설치 환경은 앱에서도 특정 채널이 작동하지 않을 수 있습니다. 이 연동이 월패드나 실제 장치의 문제를 해결하지는 않습니다.
+
+## 개발·배포
+
+```sh
+python3.14 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/pytest
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+.venv/bin/python tools/build.py
+```
+
+프로토콜·HTTP 전송·HA 상태관리·설정 UI·엔티티를 분리했습니다. 테스트는 합성 데이터와 로컬 모의 서버만 사용합니다. [구조](docs/architecture.md) · [릴리스 절차](docs/releasing.md)
+
+MIT 라이선스. COMMAX 및 Apple의 공식 제품·공식 지원 연동이 아닙니다. 문의에는 원본 PCAP, 연결 JSON, 계정·인증값을 첨부하지 마세요. [보안 안내](SECURITY.md)

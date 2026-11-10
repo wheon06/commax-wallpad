@@ -1,0 +1,14 @@
+{
+  "domain": "commax_wallpad",
+  "name": "COMMAX Wallpad",
+  "codeowners": [
+    "@wheon06"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/wheon06/commax-wallpad",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/wheon06/commax-wallpad/issues",
+  "requirements": [],
+  "version": "0.2.0"
+}

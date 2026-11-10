@@ -1,0 +1,40 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest
+      - name: Check tag matches integration version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          version = json.loads(Path("custom_components/commax_wallpad/manifest.json").read_text())["version"]
+          if os.environ["RELEASE_TAG"] != "v" + version:
+              raise SystemExit("Tag and manifest version differ")
+          PY
+      - run: python tools/build.py
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes

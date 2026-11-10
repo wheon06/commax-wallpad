@@ -1,0 +1,19 @@
+name: 버그 제보
+description: 사용 중인 모델과 재현 절차를 알려주세요.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "원본 PCAP·연결 JSON·주소·계정·인증값을 첨부하지 마세요."
+  - type: input
+    id: model
+    attributes:
+      label: 월패드 모델과 Home Assistant 버전
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 재현 절차와 기대/실제 동작
+    validations:
+      required: true

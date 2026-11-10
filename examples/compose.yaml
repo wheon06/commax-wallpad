@@ -1,0 +1,10 @@
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: Asia/Seoul
+    volumes:
+      - ./homeassistant:/config
+    stop_grace_period: 60s
